@@ -2,32 +2,37 @@
 // const bch = new BCHNode(host, username, password, port, 3000);
 
 const statusCodes = {
-  successful: 0,
-  malformedResponse: 1,
-  malformedRequest: 2,
-  malformedAddress: 3,
-  malformedSignature: 4,
-  malformedMetadata: 5,
-  nonceInvalid: 6,
-  nonceExpired: 7,
-  nonceConsumed: 8,
-  invalidSignature: 9,
-  addressDenied: 10,
-  addressRevoked: 11,
-  metadataMissing: 12,
-  metadataInvalid: 13,
-  actionNotImplemented: 14,
-  actionUnavailable: 15,
-  actionDenied: 16,
-  invalidMethod: 89,
-  invalidScheme: 90,
-  invalidDomain: 91,
-  missingRequest: 95,
-  missingAddress: 96,
-  missingSignature: 96,
-  missingNonce: 97,
-  requestModified: 98,
-  internalError: 99
+  authenticationSuccessful: 0,
+  requestBroken: 100,
+  requestMissingScheme: 111,
+  requestMissingDomain: 112,
+  requestMissingNonce: 113,
+  requestMalformedScheme: 121,
+  requestMalformedDomain: 122,
+  requestInvalidDomain: 131,
+  requestInvalidNonce: 132,
+  requestAltered: 141,
+  requestExpired: 142,
+  requestConsumed: 143,
+  responseBroken: 200,
+  responseMissingRequest: 211,
+  responseMissingAddress: 212,
+  responseMissingSignature: 213,
+  responseMissingMetadata: 214,
+  responseMalformedAddress: 221,
+  responseMalformedSignature: 222,
+  responseMalformedMetadata: 223,
+  responseInvalidMethod: 231,
+  responseInvalidAddress: 232,
+  responseInvalidSignature: 233,
+  responseInvalidMetadata: 234,
+  serviceBroken: 300,
+  serviceAddressDenied: 311,
+  serviceAddressRevoked: 312,
+  serviceActionDenied: 321,
+  serviceActionUnavailable: 322,
+  serviceActionNotImplemented: 323,
+  serviceInternalError: 331
 };
 const userActions = ["delete", "logout", "revoke", "update"];
 
@@ -160,10 +165,6 @@ class CashID {
 
   getRandom(min, max) {
     return Math.floor(Math.random() * (1 + max - min)) + min;
-  }
-
-  clean(obj) {
-    Object.keys(obj).forEach(key => obj[key] == null && delete obj[key]);
   }
 
   validateRequest() {
