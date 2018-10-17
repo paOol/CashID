@@ -71,7 +71,9 @@ const regexps = {
   metadata: /(?:i((?![1-9]+))?(1)?(2)?(3)?(4)?(5)?(6)?(8)?(9)?)?(?:p((?![1-9]+))?(1)?(2)?(3)?(4)?(6)?(9)?)?(?:c((?![1-9]+))?(1)?(2)?(3)?(4)?(7)?)?/
 };
 class CashID {
-  constructor(config) {
+  constructor(domain, path, config) {
+    this.domain = domain || '';
+    this.path = path || '';
     this.bchnode = new BCHNode(
       config.host || '',
       config.username || '',
@@ -79,8 +81,6 @@ class CashID {
       config.port || '',
       config.timeout || 3000
     );
-    this.domain;
-    this.path;
     this.statusConfirmation;
   }
 
@@ -101,7 +101,7 @@ class CashID {
     console.log('action:', action, 'data:', data, 'metadata:', metadata);
 
     // Initialize an empty parameter list.
-    let parameters;
+    let parameters = {};
 
     // If a specific action was requested, add it to the parameter list.
     if (action !== undefined) {
@@ -126,13 +126,26 @@ class CashID {
     // Append the nonce to the parameter list.
     parameters['x'] = `x=${nonce}`;
 
-    // Form the request URI from the configured values.
-    let requestUri = `cashid:${this.domain}${this.path}?${parameters.join(
-      '&'
-    )}`;
+    let params = this.concatKeys(parameters);
 
+    // Form the request URI from the configured values.
+    let requestUri = `cashid:${this.domain}${this.path}?${params}`;
+
+    console.log('requestUri', requestUri);
     // Return the request URI to indicate success.
     return requestUri;
+  }
+
+  concatKeys(obj) {
+    let final;
+    Object.keys(obj).map(key => {
+      console.log('each key', key);
+      final += `&${obj[key]}`;
+    });
+
+    final = final.replace('undefined', '');
+    final = final.substring(1);
+    return final;
   }
 
   /**
@@ -143,37 +156,45 @@ class CashID {
    */
 
   encodeRequestMetadata(metadata) {
+    console.log('the metadata', metadata);
+
     // Initialize an empty metadata string.
-    metadataString = '';
+    let metadataString = '';
 
+    Object.keys(metadataNames).map(x => {
+      console.log('each meta data name', x);
+      console.log('test', metadataNames[x]);
+      let metadataLetter = substr(metadataName, 0, 1);
+    });
     // Iterate over the available metadata names.
-    for (const ticker of tickers) {
-      for (const metadataName of metadataNames) {
-        // Store the first letter of the metadata type.
-        metadataLetter = substr(metadataName, 0, 1);
+    //
+    // for (const metadataName of metadataNames) {
+    //   // Store the first letter of the metadata type.
+    //   metadataLetter = substr(metadataName, 0, 1);
 
-        // Initialize an empty metadata part string.
-        metadataPart = '';
+    //   // Initialize an empty metadata part string.
+    //   metadataPart = '';
 
-        //
-        if (metadata[metadataName].length) {
-          // Iterate over each field of this metadata type.
-          for (const metadataField of metadataFields) {
-            // If this field was requested..
-            if (metadata[metadataName].indexOf(field_name)) {
-              // .. add it to the metadata part.
-              metadataPart += fieldCode;
-            }
-          }
+    //   //
+    //   console.log('metadata[metadataName]', metadata[metadataName]);
+    //   if (metadata[metadataName].length) {
+    //     // Iterate over each field of this metadata type.
+    //     for (const metadataField of metadataFields) {
+    //       // If this field was requested..
+    //       if (metadata[metadataName].indexOf(field_name)) {
+    //         // .. add it to the metadata part.
+    //         metadataPart += fieldCode;
+    //       }
+    //     }
 
-          // If, after checking for requested metadata of this type, some matches were found..
-          if (metadataPart !== '') {
-            // Add the letter and numbers matching the requested metadata to the metadata string.
-            metadataString += `${metadataLetter}${metadataPart}`;
-          }
-        }
-      }
-    }
+    //     // If, after checking for requested metadata of this type, some matches were found..
+    //     if (metadataPart !== '') {
+    //       // Add the letter and numbers matching the requested metadata to the metadata string.
+    //       metadataString += `${metadataLetter}${metadataPart}`;
+    //     }
+    //   }
+    // }
+
     // Return the filled in metadata string.
     return metadataString;
   }
