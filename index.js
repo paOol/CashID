@@ -84,16 +84,16 @@ class CashID {
     this.statusConfirmation;
   }
 
-  // constructor(host, username, password, port, timeout) {
-  //   this.host = host || "";
-  //   this.username = username || "";
-  //   this.password = password || "";
-  //   this.port = port || "";
-  //   this.timeout = timeout || 3000;
+  /**
+   * creates a request
+   *
+   * @param {String} action - Name of the action the user authenticates to perform
+   * @param {String} data - Data relevant to the requested action
+   * @param {String} metadata - Various parameters
+   * @returns {string} returns uri
+   * ie: cashid:something.com/api/test?x=123
+   */
 
-  //   console.log("constr", this.host, this.username);
-  //   this.statusConfirmation;
-  // }
   createRequest(action, data, metadata) {
     // generate a random nonce.
     let nonce = this.getRandom(100000000, 999999999);
@@ -135,6 +135,13 @@ class CashID {
     return requestUri;
   }
 
+  /**
+   * encodes metadata
+   *
+   * @param {String} metadata - Various parameters
+   * @returns {string}
+   */
+
   encodeRequestMetadata(metadata) {
     // Initialize an empty metadata string.
     metadataString = '';
@@ -175,16 +182,21 @@ class CashID {
     return Math.floor(Math.random() * (1 + max - min)) + min;
   }
 
+  /**
+   * validates a request
+   *
+   * @param {Object} response - example looks like
+   *
+   *  let responseObject = {
+   *    request:
+   *      'cashid:demo.cashid.info/api/parse.php?a=login&d=15366-4133-6141-9638&o=i3&x=557579911',
+   *    address: 'qpaf03cxjstfc42we3480f4vtznw4356jsn27r5cs3',
+   *    signature:'H3hCOFaVnzCz5SyN+Rm9NO+wsLtW4G9S8kLu9Xf8bjoJC3eR9sMdWqS+BJMW5/6yMJBrS+hkNDd41bYPuP3eLY0=',
+   *    metadata: []
+   *  };
+   * @returns {Object} returns parsed request
+   */
   async validateRequest(responseObject) {
-    // let responseObject = {
-    //   request:
-    //     'cashid:demo.cashid.info/api/parse.php?a=login&d=15366-4133-6141-9638&o=i3&x=557579911',
-    //   address: 'qpaf03cxjstfc42we3480f4vtznw4356jsn27r5cs3',
-    //   signature:
-    //     'H3hCOFaVnzCz5SyN+Rm9NO+wsLtW4G9S8kLu9Xf8bjoJC3eR9sMdWqS+BJMW5/6yMJBrS+hkNDd41bYPuP3eLY0=',
-    //   metadata: []
-    // };
-
     let verificationStatus = await this.bchnode.verifyMessage(
       responseObject['address'],
       responseObject['signature'],
@@ -456,6 +468,12 @@ class CashID {
     }
   }
 
+  /**
+   * confirms request
+   *
+   *
+   * @returns {string}
+   */
   confirmRequest() {
     // // Sanity check if headers have already been sent.
     // if (headers_sent()) {
@@ -475,6 +493,13 @@ class CashID {
     // // send the response confirmation back to the identity manager.
     // return this.statusConfirmation;
   }
+
+  /**
+   * parse request
+   *
+   * @param {String} requestURI -ie cashid:domain.com/path
+   * @returns {Object} formatted to show the parameters
+   */
 
   parseCashIDRequest(requestURI) {
     let regnames = {
