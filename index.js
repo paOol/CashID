@@ -98,7 +98,7 @@ class CashID {
     // generate a random nonce.
     let nonce = this.getRandom(100000000, 999999999);
 
-    console.log('action:', action, 'data:', data, 'metadata:', metadata);
+    // console.log('action:', action, 'data:', data, 'metadata:', metadata);
 
     // Initialize an empty parameter list.
     let parameters = {};
@@ -125,6 +125,7 @@ class CashID {
 
     // Append the nonce to the parameter list.
     parameters['x'] = `x=${nonce}`;
+    parameters['z'] = `z=asdftest`;
 
     let params = this.concatKeys(parameters);
 
@@ -139,7 +140,6 @@ class CashID {
   concatKeys(obj) {
     let final;
     Object.keys(obj).map(key => {
-      console.log('each key', key);
       final += `&${obj[key]}`;
     });
 
@@ -161,11 +161,23 @@ class CashID {
     // Initialize an empty metadata string.
     let metadataString = '';
 
-    Object.keys(metadataNames).map(x => {
-      console.log('each meta data name', x);
-      console.log('test', metadataNames[x]);
-      let metadataLetter = substr(metadataName, 0, 1);
+    let metaTypes = Object.keys(metadataNames);
+    console.log('metaTypes', metaTypes);
+
+    Object.entries(metadataNames).forEach(([key, value]) => {
+      console.log('hmm', metadata[key], 'each key', key, 'each value', value);
+
+      // if (metadata[key].length) {
+      //       console.log(`key= ${key} value = ${value}`)
+      // }
     });
+
+    // Object.keys(metadataNames).map(x => {
+    //   console.log('each meta data name', x);
+    //   console.log('test', metadataNames[x]);
+    //   let metadataLetter = substr(metadataName, 0, 1);
+    // });
+
     // Iterate over the available metadata names.
     //
     // for (const metadataName of metadataNames) {
@@ -234,14 +246,14 @@ class CashID {
       if (responseObject === null) {
         throw new Error(
           `Response data is not a valid JSON object. ${
-            statusCodes['responseMalformedMetadata']
+            statusCodes['responseBroken']
           }`
         );
         // unsure if correct statuscode
       }
 
       // Validate if the required field 'request' exists.
-      if (responseObject['request'] === 'undefined') {
+      if (responseObject['request'] === undefined) {
         throw new Error(
           "Response data is missing required 'request' property.",
           statusCodes['responseMissingRequest']
@@ -249,7 +261,7 @@ class CashID {
       }
 
       // Validate if the required field 'address' exists.
-      if (responseObject['address'] === 'undefined') {
+      if (responseObject['address'] === undefined) {
         throw new Error(
           `Response data is missing required 'adress' property.", ${
             statusCodes['responseMissingAddress']
@@ -258,7 +270,7 @@ class CashID {
       }
 
       // Validate if the required field 'signature' exists.
-      if (responseObject['signature'] === 'undefined') {
+      if (responseObject['signature'] === undefined) {
         throw new Error(
           `Response data is missing required 'signature' property.", ${
             statusCodes['responseMissingSignature']
@@ -278,7 +290,7 @@ class CashID {
         );
       } else if (parsedRequest == 0) {
         throw new Error(
-          `Request URI is invalid, ${statusCodes['requestInvalidDomain']}`
+          `Request URI is invalid, ${statusCodes['requestBroken']}`
         );
       }
 
@@ -318,7 +330,7 @@ class CashID {
       }
 
       // Validate the existance of a nonce.
-      if (parsedRequest['parameters']['nonce'] === 'undefined') {
+      if (parsedRequest['parameters']['nonce'] === undefined) {
         throw new Error(
           `Request parameter 'nonce' is missing.", ${
             statusCodes['requestMissingNonce']
@@ -358,7 +370,7 @@ class CashID {
       if (!user_initiated_request && requestReference['available'] === false) {
         throw new Error(
           `The request nonce was not issued by this service.", ${
-            statusCodes['requestInvalidNonce']
+            statusCodes['nonceConsumed']
           }`
         );
       }
@@ -379,7 +391,7 @@ class CashID {
       ) {
         throw new Error(
           `The response does not match the request parameters.", ${
-            statusCodes['requestModified']
+            statusCodes['requestAltered']
           }`
         );
       }
@@ -395,7 +407,7 @@ class CashID {
       if (verificationStatus !== true) {
         throw new Error(
           `Signature verification failed: this.rpc_error, ${
-            statusCodes['invalidSignature']
+            statusCodes['responseInvalidSignature']
           }`
         );
       }
@@ -408,7 +420,7 @@ class CashID {
         // If the field was required && missing from the response..
         if (
           metadataValue &&
-          responseObject['metadata'][metadataName] === 'undefined'
+          responseObject['metadata'][metadataName] === undefined
         ) {
           // Store it in the list of missing fields.
           missingFields[metadataName] = metadataName;
@@ -430,7 +442,7 @@ class CashID {
         if (
           parsedRequest['parameters']['required'][metadataName] ===
             'undefined' &&
-          parsedRequest['parameters']['optional'][metadataName] === 'undefined'
+          parsedRequest['parameters']['optional'][metadataName] === undefined
         ) {
           throw new Error(
             `The metadata field '{metadataName}' was not part of the request.", ${
@@ -443,7 +455,7 @@ class CashID {
         if (metadataValue == '' || metadataValue === null) {
           throw new Error(
             `The metadata field '{metadataName}' did not contain any value.", ${
-              statusCodes['responseInvalidMetadata']
+              statusCodes['responseMalformedMetadata']
             }`
           );
         }
