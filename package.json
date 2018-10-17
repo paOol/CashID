@@ -1,6 +1,6 @@
 {
   "name": "cashid",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "JS implementation of CashID by Jonathan Silverblood",
   "main": "index.js",
   "scripts": {

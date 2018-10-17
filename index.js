@@ -125,7 +125,6 @@ class CashID {
 
     // Append the nonce to the parameter list.
     parameters['x'] = `x=${nonce}`;
-    parameters['z'] = `z=asdftest`;
 
     let params = this.concatKeys(parameters);
 
@@ -156,56 +155,39 @@ class CashID {
    */
 
   encodeRequestMetadata(metadata) {
-    console.log('the metadata', metadata);
-
     // Initialize an empty metadata string.
     let metadataString = '';
 
-    let metaTypes = Object.keys(metadataNames);
-    console.log('metaTypes', metaTypes);
+    //Iterate over the available metadata names.
+    for (const metadataName in metadataNames) {
+      // Store the first letter of the metadata type.
+      let metadataLetter = metadataName.substring(0, 1);
 
-    Object.entries(metadataNames).forEach(([key, value]) => {
-      console.log('hmm', metadata[key], 'each key', key, 'each value', value);
+      // Initialize an empty metadata part string.
+      let metadataPart = '';
 
-      // if (metadata[key].length) {
-      //       console.log(`key= ${key} value = ${value}`)
-      // }
-    });
+      if (
+        metadata[metadataName] !== undefined &&
+        metadata[metadataName].length
+      ) {
+        // Iterate over each field of this metadata type.
+        for (const metadataField of metadata[metadataName]) {
+          let dataNameValue = metadataNames[metadataName][metadataField];
 
-    // Object.keys(metadataNames).map(x => {
-    //   console.log('each meta data name', x);
-    //   console.log('test', metadataNames[x]);
-    //   let metadataLetter = substr(metadataName, 0, 1);
-    // });
+          // If this field was requested..
+          if (metadata[metadataName].indexOf(metadataField)) {
+            // .. add it to the metadata part.
+            metadataPart += dataNameValue;
+          }
+        }
 
-    // Iterate over the available metadata names.
-    //
-    // for (const metadataName of metadataNames) {
-    //   // Store the first letter of the metadata type.
-    //   metadataLetter = substr(metadataName, 0, 1);
-
-    //   // Initialize an empty metadata part string.
-    //   metadataPart = '';
-
-    //   //
-    //   console.log('metadata[metadataName]', metadata[metadataName]);
-    //   if (metadata[metadataName].length) {
-    //     // Iterate over each field of this metadata type.
-    //     for (const metadataField of metadataFields) {
-    //       // If this field was requested..
-    //       if (metadata[metadataName].indexOf(field_name)) {
-    //         // .. add it to the metadata part.
-    //         metadataPart += fieldCode;
-    //       }
-    //     }
-
-    //     // If, after checking for requested metadata of this type, some matches were found..
-    //     if (metadataPart !== '') {
-    //       // Add the letter and numbers matching the requested metadata to the metadata string.
-    //       metadataString += `${metadataLetter}${metadataPart}`;
-    //     }
-    //   }
-    // }
+        // If, after checking for requested metadata of this type, some matches were found..
+        if (metadataPart !== '') {
+          // Add the letter and numbers matching the requested metadata to the metadata string.
+          metadataString += `${metadataLetter}${metadataPart}`;
+        }
+      }
+    }
 
     // Return the filled in metadata string.
     return metadataString;
