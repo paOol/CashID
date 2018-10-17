@@ -97,9 +97,8 @@ class CashID {
   createRequest(action, data, metadata) {
     // generate a random nonce.
     let nonce = this.getRandom(100000000, 999999999);
-    console.log('random', nonce);
 
-    console.log('action', action);
+    console.log('action:', action, 'data:', data, 'metadata:', metadata);
 
     // Initialize an empty parameter list.
     let parameters;
@@ -171,32 +170,20 @@ class CashID {
     // Return the filled in metadata string.
     return metadataString;
   }
-  parseRequest(requestUri) {
-    console.log('requestUri', requestUri);
-    // Initialize empty structure
-
-    let parsed = this.parseCashIDRequest(requestUri);
-
-    // remove undefined keys
-    let formatted = JSON.parse(JSON.stringify(parsed));
-    console.log('formatted', formatted);
-
-    return formatted;
-  }
 
   getRandom(min, max) {
     return Math.floor(Math.random() * (1 + max - min)) + min;
   }
 
-  async validateRequest() {
-    let responseObject = {
-      request:
-        'cashid:demo.cashid.info/api/parse.php?a=login&d=15366-4133-6141-9638&o=i3&x=557579911',
-      address: 'qpaf03cxjstfc42we3480f4vtznw4356jsn27r5cs3',
-      signature:
-        'H3hCOFaVnzCz5SyN+Rm9NO+wsLtW4G9S8kLu9Xf8bjoJC3eR9sMdWqS+BJMW5/6yMJBrS+hkNDd41bYPuP3eLY0=',
-      metadata: []
-    };
+  async validateRequest(responseObject) {
+    // let responseObject = {
+    //   request:
+    //     'cashid:demo.cashid.info/api/parse.php?a=login&d=15366-4133-6141-9638&o=i3&x=557579911',
+    //   address: 'qpaf03cxjstfc42we3480f4vtznw4356jsn27r5cs3',
+    //   signature:
+    //     'H3hCOFaVnzCz5SyN+Rm9NO+wsLtW4G9S8kLu9Xf8bjoJC3eR9sMdWqS+BJMW5/6yMJBrS+hkNDd41bYPuP3eLY0=',
+    //   metadata: []
+    // };
 
     let verificationStatus = await this.bchnode.verifyMessage(
       responseObject['address'],
@@ -214,16 +201,17 @@ class CashID {
       if (responseObject === null) {
         throw new Error(
           `Response data is not a valid JSON object. ${
-            this.statusCodes['malformedResponse']
+            statusCodes['responseMalformedMetadata']
           }`
         );
+        // unsure if correct statuscode
       }
 
       // Validate if the required field 'request' exists.
       if (responseObject['request'] === 'undefined') {
         throw new Error(
           "Response data is missing required 'request' property.",
-          this.statusCodes['missingRequest']
+          statusCodes['responseMissingRequest']
         );
       }
 
@@ -231,7 +219,7 @@ class CashID {
       if (responseObject['address'] === 'undefined') {
         throw new Error(
           `Response data is missing required 'adress' property.", ${
-            this.statusCodes['missingAddress']
+            statusCodes['responseMissingAddress']
           }`
         );
       }
@@ -240,32 +228,34 @@ class CashID {
       if (responseObject['signature'] === 'undefined') {
         throw new Error(
           `Response data is missing required 'signature' property.", ${
-            this.statusCodes['missingSignature']
+            statusCodes['responseMissingSignature']
           }`
         );
       }
 
       // Parse the request.
-      let parsedRequest = this.parseRequest(responseObject['request']);
+      let parsedRequest = this.parseCashIDRequest(responseObject['request']);
 
       // Validate overall structure.
       if (parsedRequest === false) {
         throw new Error(
           `Internal server error, could not evaluate request structure ${
-            this.statusCodes['internalError']
+            statusCodes['serviceInternalError']
           }`
         );
       } else if (parsedRequest == 0) {
         throw new Error(
-          `Request URI is invalid, ${this.statusCodes['malformedRequest']}`
+          `Request URI is invalid, ${statusCodes['requestInvalidDomain']}`
         );
       }
 
       // Validate the request scheme.
       if (parsedRequest['scheme'] != 'cashid:') {
         throw new Error(
-          `Request scheme '{parsedRequest['scheme']}' is invalid, should be 'cashid:'.", ${
-            this.statusCodes['invalidScheme']
+          `Request scheme ${
+            parsedRequest['scheme']
+          } is invalid, should be 'cashid:'.", ${
+            statusCodes['requestMalformedScheme']
           }`
         );
       }
@@ -276,7 +266,7 @@ class CashID {
           `Request domain  ${
             parsedRequest['domain']
           } is invalid, this service uses ${this.domain}, ${
-            this.statusCodes['invalidDomain']
+            statusCodes['requestInvalidDomain']
           }`
         );
       }
@@ -285,14 +275,12 @@ class CashID {
       if (parsedRequest['parameters'] === false) {
         throw new Error(
           `Internal server error, could not evaluate request parameters.", ${
-            this.statusCodes['internalError']
+            statusCodes['serviceInternalError']
           }`
         );
       } else if (parsedRequest['parameters'] == 0) {
         throw new Error(
-          `Request parameters are invalid.", ${
-            this.statusCodes['malformedRequest']
-          }`
+          `Request parameters are invalid.", ${statusCodes['requestBroken']}`
         );
       }
 
@@ -300,7 +288,7 @@ class CashID {
       if (parsedRequest['parameters']['nonce'] === 'undefined') {
         throw new Error(
           `Request parameter 'nonce' is missing.", ${
-            this.statusCodes['missingNonce']
+            statusCodes['requestMissingNonce']
           }`
         );
       }
@@ -316,19 +304,19 @@ class CashID {
       // // Validate if a user initiated request is a recent and valid timestamp...
       // if(user_initiated_request and ((parsedRequest['parameters']['nonce'] < recent_time) or (parsedRequest['parameters']['nonce'] > current_time)))
       // {
-      //   throw new Error(`Request nonce for user initated action is not a valid and recent timestamp.", ${this.statusCodes['nonceInvalid']}`);
+      //   throw new Error(`Request nonce for user initated action is not a valid and recent timestamp.", ${statusCodes['requestInvalidNonce']}`);
       // }
 
       // Try to load the request from the apcu object cache.
-      let requestReference = apcu_fetch(
-        "cashid_request_{parsedRequest['parameters']['nonce']}"
-      );
+      // let requestReference = apcu_fetch(
+      //   "cashid_request_{parsedRequest['parameters']['nonce']}"
+      // );
 
       // Validate that the request was issued by this service provider.
       if (!user_initiated_request && requestReference === false) {
         throw new Error(
           `The request nonce was not issued by this service.", ${
-            this.statusCodes['nonceInvalid']
+            statusCodes['requestInvalidNonce']
           }`
         );
       }
@@ -337,7 +325,7 @@ class CashID {
       if (!user_initiated_request && requestReference['available'] === false) {
         throw new Error(
           `The request nonce was not issued by this service.", ${
-            this.statusCodes['nonceConsumed']
+            statusCodes['requestInvalidNonce']
           }`
         );
       }
@@ -346,7 +334,7 @@ class CashID {
       if (!user_initiated_request && requestReference['expires'] < time()) {
         throw new Error(
           `The request has expired && is no longer available.", ${
-            this.statusCodes['nonceExpired']
+            statusCodes['requestExpired']
           }`
         );
       }
@@ -358,7 +346,7 @@ class CashID {
       ) {
         throw new Error(
           `The response does not match the request parameters.", ${
-            this.statusCodes['requestModified']
+            statusCodes['requestModified']
           }`
         );
       }
@@ -374,7 +362,7 @@ class CashID {
       if (verificationStatus !== true) {
         throw new Error(
           `Signature verification failed: this.rpc_error, ${
-            this.statusCodes['invalidSignature']
+            statusCodes['invalidSignature']
           }`
         );
       }
@@ -398,7 +386,7 @@ class CashID {
       if (missingFields.length >= 1) {
         throw new Error(
           `The required metadata field(s) '" . implode(', ', missingFields) . "' was not provided.", ${
-            this.statusCodes['metadataMissing']
+            statusCodes['responseMissingMetadata']
           }`
         );
       }
@@ -413,7 +401,7 @@ class CashID {
         ) {
           throw new Error(
             `The metadata field '{metadataName}' was not part of the request.", ${
-              this.statusCodes['metadataInvalid']
+              statusCodes['responseInvalidMetadata']
             }`
           );
         }
@@ -422,7 +410,7 @@ class CashID {
         if (metadataValue == '' || metadataValue === null) {
           throw new Error(
             `The metadata field '{metadataName}' did not contain any value.", ${
-              this.statusCodes['metadataInvalid']
+              statusCodes['responseInvalidMetadata']
             }`
           );
         }
@@ -436,7 +424,7 @@ class CashID {
       //   )
       // ) {
       //   throw new Error(
-      //     `Internal server error, could not store response object.", this.statusCodes['internalError']`
+      //     `Internal server error, could not store response object.", statusCodes['serviceInternalError']`
       //   );
       // }
 
@@ -448,7 +436,7 @@ class CashID {
       //   )
       // ) {
       //   throw new Error(
-      //     `Internal server error, could not store confirmation object.", this.statusCodes['internalError']`
+      //     `Internal server error, could not store confirmation object.", statusCodes['serviceInternalError']`
       //   );
       // }
 
@@ -567,7 +555,9 @@ class CashID {
       }
     }
 
-    return requestNamedParts;
+    // remove undefined keys
+    let formatted = JSON.parse(JSON.stringify(requestNamedParts));
+    return formatted;
   }
 }
 
