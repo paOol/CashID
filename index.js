@@ -1,6 +1,6 @@
 const BCHNode = require('bitcoin-cash-rpc');
-
-// const conf = require("./config");
+let BITBOXSDK = require('bitbox-sdk/lib/bitbox-sdk').default;
+let BITBOX = new BITBOXSDK();
 
 const statusCodes = {
   authenticationSuccessful: 0,
@@ -71,16 +71,17 @@ const regexps = {
   metadata: /(?:i((?![1-9]+))?(1)?(2)?(3)?(4)?(5)?(6)?(8)?(9)?)?(?:p((?![1-9]+))?(1)?(2)?(3)?(4)?(6)?(9)?)?(?:c((?![1-9]+))?(1)?(2)?(3)?(4)?(7)?)?/
 };
 class CashID {
-  constructor(domain, path, config) {
+  /**
+   * constructor
+   *
+   * @param {String} domain - dont include http/https in front
+   * @param {String} path - api endpoint ie "/api/test"
+   */
+
+  constructor(domain, path) {
     this.domain = domain || '';
     this.path = path || '';
-    this.bchnode = new BCHNode(
-      config.host || '',
-      config.username || '',
-      config.password || '',
-      config.port || '',
-      config.timeout || 3000
-    );
+
     this.statusConfirmation;
   }
 
@@ -212,11 +213,16 @@ class CashID {
    * @returns {Object} returns parsed request
    */
   async validateRequest(responseObject) {
-    let verificationStatus = await this.bchnode.verifyMessage(
+    console.log(`${responseObject['address']}, responseObject['address']`);
+    console.log(`${responseObject['signature']}, responseObject['signature']`);
+    console.log(`${responseObject['request']}, responseObject['request']`);
+
+    let verificationStatus = BITBOX.BitcoinCash.verifyMessage(
       responseObject['address'],
       responseObject['signature'],
       responseObject['request']
     );
+
     console.log('verificationStatus', verificationStatus);
 
     try {
@@ -227,7 +233,7 @@ class CashID {
 
       if (responseObject === null) {
         throw new Error(
-          `Response data is not a valid JSON object. ${
+          `Response data is not a valid JSON object. statuscode:${
             statusCodes['responseBroken']
           }`
         );
@@ -245,7 +251,7 @@ class CashID {
       // Validate if the required field 'address' exists.
       if (responseObject['address'] === undefined) {
         throw new Error(
-          `Response data is missing required 'adress' property.", ${
+          `Response data is missing required 'adress' property.", statuscode:${
             statusCodes['responseMissingAddress']
           }`
         );
@@ -254,7 +260,7 @@ class CashID {
       // Validate if the required field 'signature' exists.
       if (responseObject['signature'] === undefined) {
         throw new Error(
-          `Response data is missing required 'signature' property.", ${
+          `Response data is missing required 'signature' property.", statuscode:${
             statusCodes['responseMissingSignature']
           }`
         );
@@ -266,7 +272,7 @@ class CashID {
       // Validate overall structure.
       if (parsedRequest === false) {
         throw new Error(
-          `Internal server error, could not evaluate request structure ${
+          `Internal server error, could not evaluate request structure statuscode:${
             statusCodes['serviceInternalError']
           }`
         );
@@ -281,7 +287,7 @@ class CashID {
         throw new Error(
           `Request scheme ${
             parsedRequest['scheme']
-          } is invalid, should be 'cashid:'.", ${
+          } is invalid, should be 'cashid:'.", statuscode:${
             statusCodes['requestMalformedScheme']
           }`
         );
@@ -292,7 +298,7 @@ class CashID {
         throw new Error(
           `Request domain  ${
             parsedRequest['domain']
-          } is invalid, this service uses ${this.domain}, ${
+          } is invalid, this service uses ${this.domain}, statuscode:${
             statusCodes['requestInvalidDomain']
           }`
         );
@@ -301,7 +307,7 @@ class CashID {
       // Validate the parameter structure
       if (parsedRequest['parameters'] === false) {
         throw new Error(
-          `Internal server error, could not evaluate request parameters.", ${
+          `Internal server error, could not evaluate request parameters.", statuscode:${
             statusCodes['serviceInternalError']
           }`
         );
@@ -314,7 +320,7 @@ class CashID {
       // Validate the existance of a nonce.
       if (parsedRequest['parameters']['nonce'] === undefined) {
         throw new Error(
-          `Request parameter 'nonce' is missing.", ${
+          `Request parameter 'nonce' is missing.", statuscode:${
             statusCodes['requestMissingNonce']
           }`
         );
@@ -342,7 +348,7 @@ class CashID {
       // Validate that the request was issued by this service provider.
       if (!user_initiated_request && requestReference === false) {
         throw new Error(
-          `The request nonce was not issued by this service.", ${
+          `The request nonce was not issued by this service.", statuscode:${
             statusCodes['requestInvalidNonce']
           }`
         );
@@ -351,7 +357,7 @@ class CashID {
       // Validate if the request is available
       if (!user_initiated_request && requestReference['available'] === false) {
         throw new Error(
-          `The request nonce was not issued by this service.", ${
+          `The request nonce was not issued by this service.", statuscode:${
             statusCodes['nonceConsumed']
           }`
         );
@@ -360,7 +366,7 @@ class CashID {
       // Validate if the request has expired.
       if (!user_initiated_request && requestReference['expires'] < time()) {
         throw new Error(
-          `The request has expired && is no longer available.", ${
+          `The request has expired && is no longer available.", statuscode:${
             statusCodes['requestExpired']
           }`
         );
@@ -372,23 +378,24 @@ class CashID {
         requestReference['request'] != responseObject['request']
       ) {
         throw new Error(
-          `The response does not match the request parameters.", ${
+          `The response does not match the request parameters.", statuscode:${
             statusCodes['requestAltered']
           }`
         );
       }
 
-      // Send the request parts to bitcoind for signature verification.
-      let verificationStatus = this.bchnode.verifyMessage(
+      // signature verification.
+      const Message = bch.Message;
+      const message = new Message(responseObject['request']);
+      let verificationStatus = message.verify(
         responseObject['address'],
-        responseObject['signature'],
-        responseObject['request']
+        responseObject['signature']
       );
 
       // Validate the signature.
       if (verificationStatus !== true) {
         throw new Error(
-          `Signature verification failed: this.rpc_error, ${
+          `Signature verification failed: this.rpc_error, statuscode:${
             statusCodes['responseInvalidSignature']
           }`
         );
@@ -412,7 +419,7 @@ class CashID {
       // Validate if there was missing metadata.
       if (missingFields.length >= 1) {
         throw new Error(
-          `The required metadata field(s) '" . implode(', ', missingFields) . "' was not provided.", ${
+          `The required metadata field(s) '" . implode(', ', missingFields) . "' was not provided.", statuscode:${
             statusCodes['responseMissingMetadata']
           }`
         );
