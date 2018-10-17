@@ -1,0 +1,32 @@
+{
+  "name": "cashid",
+  "version": "0.0.1",
+  "description": "JS implementation of CashID by Jonathan Silverblood",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paOol/CashID.git"
+  },
+  "keywords": [
+    "async",
+    "await",
+    "es6",
+    "cashid",
+    "bch",
+    "javascript"
+  ],
+  "author": "paOol",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paOol/CashID/issues"
+  },
+  "homepage": "https://github.com/paOol/CashID#readme",
+  "dependencies": {
+    "bitcoin-cash-rpc": "^0.2.1",
+    "react": "^16.5.2",
+    "react-qr-svg": "^2.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+let config = {
+  host: "host",
+  username: "asdf",
+  password: "asdf",
+  port: 8332,
+  timeout: ''
+};
+
+module.exports = config;

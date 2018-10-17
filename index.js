@@ -1,5 +1,14 @@
-// const BCHNode = require("bitcoin-cash-rpc");
-// const bch = new BCHNode(host, username, password, port, 3000);
+const BCHNode = require("bitcoin-cash-rpc");
+
+const conf = require("./config");
+
+const bch = new BCHNode(
+  conf.host,
+  conf.username,
+  conf.password,
+  conf.port,
+  3000
+);
 
 const statusCodes = {
   authenticationSuccessful: 0,
@@ -167,7 +176,7 @@ class CashID {
     return Math.floor(Math.random() * (1 + max - min)) + min;
   }
 
-  validateRequest() {
+  async validateRequest() {
     let responseObject = {
       request:
         "cashid:demo.cashid.info/api/parse.php?a=login&d=15366-4133-6141-9638&o=i3&x=557579911",
@@ -176,6 +185,14 @@ class CashID {
         "H3hCOFaVnzCz5SyN+Rm9NO+wsLtW4G9S8kLu9Xf8bjoJC3eR9sMdWqS+BJMW5/6yMJBrS+hkNDd41bYPuP3eLY0=",
       metadata: []
     };
+
+    let verificationStatus = await bch.verifyMessage(
+      responseObject["address"],
+      responseObject["signature"],
+      responseObject["request"]
+    );
+    console.log("verificationStatus", verificationStatus);
+
     try {
       this.statusConfirmation = {
         status: `${statusCodes["successful"]}`,
@@ -333,7 +350,7 @@ class CashID {
       }
 
       // Send the request parts to bitcoind for signature verification.
-      let verificationStatus = this.verifymessage(
+      let verificationStatus = bch.verifymessage(
         responseObject["address"],
         responseObject["signature"],
         responseObject["request"]
@@ -435,6 +452,26 @@ class CashID {
       console.log("err", e.message);
       return false;
     }
+  }
+
+  confirmRequest() {
+    // // Sanity check if headers have already been sent.
+    // if (headers_sent()) {
+    //   throw new Error(
+    //     "confirmRequest() was called after data had been transmitted to the client, which prevents setting the required headers."
+    //   );
+    // }
+    // // Sanity check if validation has not yet been done.
+    // if (!isset(this.statusConfirmation["status"])) {
+    //   throw new Error(
+    //     "confirmRequest() was called before validate_request so there is no confirmation to transmit to the client."
+    //   );
+    // }
+    // // Configure confirmation message type.
+    // header("Content-type: application/json; charset=utf-8");
+    // header("Cache-Control: no-cache");
+    // // send the response confirmation back to the identity manager.
+    // return this.statusConfirmation;
   }
 
   parseCashIDRequest(requestURI) {
