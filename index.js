@@ -73,11 +73,11 @@ const regexps = {
 class CashID {
   constructor(config) {
     this.bchnode = new BCHNode(
-      config.host,
-      config.username,
-      config.password,
-      config.port,
-      3000
+      config.host || '',
+      config.username || '',
+      config.password || '',
+      config.port || '',
+      config.timeout || 3000
     );
     this.domain;
     this.path;
