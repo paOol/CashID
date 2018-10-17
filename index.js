@@ -131,7 +131,6 @@ class CashID {
     // Form the request URI from the configured values.
     let requestUri = `cashid:${this.domain}${this.path}?${params}`;
 
-    console.log('requestUri', requestUri);
     // Return the request URI to indicate success.
     return requestUri;
   }
@@ -173,11 +172,12 @@ class CashID {
         // Iterate over each field of this metadata type.
         for (const metadataField of metadata[metadataName]) {
           let dataNameValue = metadataNames[metadataName][metadataField];
+          dataNameValue = dataNameValue.toString();
 
           // If this field was requested..
-          if (metadata[metadataName].indexOf(metadataField)) {
+          if (metadata[metadataName].includes(metadataField)) {
             // .. add it to the metadata part.
-            metadataPart += dataNameValue;
+            metadataPart += `${dataNameValue}`;
           }
         }
 
