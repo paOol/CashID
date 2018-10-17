@@ -114,12 +114,12 @@ class CashID {
     }
 
     // If required metadata was requested, add them to the parameter list.
-    if (metadata['required']) {
+    if (metadata !== undefined && metadata['required']) {
       parameters['r'] = `r=${this.encodeRequestMetadata(metadata['required'])}`;
     }
 
     // If optional metadata was requested, add them to the parameter list.
-    if (metadata['optional']) {
+    if (metadata !== undefined && metadata['optional']) {
       parameters['o'] = `o=${this.encodeRequestMetadata(metadata['optional'])}`;
     }
 
