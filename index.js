@@ -212,19 +212,7 @@ class CashID {
    *  };
    * @returns {Object} returns parsed request
    */
-  async validateRequest(responseObject) {
-    console.log(`${responseObject['address']}, responseObject['address']`);
-    console.log(`${responseObject['signature']}, responseObject['signature']`);
-    console.log(`${responseObject['request']}, responseObject['request']`);
-
-    let verificationStatus = BITBOX.BitcoinCash.verifyMessage(
-      responseObject['address'],
-      responseObject['signature'],
-      responseObject['request']
-    );
-
-    console.log('verificationStatus', verificationStatus);
-
+  validateRequest(responseObject) {
     try {
       this.statusConfirmation = {
         status: `${statusCodes['successful']}`,
@@ -327,7 +315,8 @@ class CashID {
       }
 
       // // Locally store if the request action is a user-initiated action.
-      // user_initiated_request = isset(this.USER_ACTIONS[parsedRequest['parameters']['action']]);
+      let userInitiatedRequest =
+        userActions[parsedRequest['parameters']['action']] !== undefined;
 
       // Locally store values to compare with nonce timestamp to validate recency.
       // NOTE: current time is set to 1 minute in the future to allow for minor clock drift.
@@ -335,18 +324,19 @@ class CashID {
       // let current_time = time() + 60 * 1 * 1;
 
       // // Validate if a user initiated request is a recent and valid timestamp...
-      // if(user_initiated_request and ((parsedRequest['parameters']['nonce'] < recent_time) or (parsedRequest['parameters']['nonce'] > current_time)))
+      // if(userInitiatedRequest and ((parsedRequest['parameters']['nonce'] < recent_time) or (parsedRequest['parameters']['nonce'] > current_time)))
       // {
       //   throw new Error(`Request nonce for user initated action is not a valid and recent timestamp.", ${statusCodes['requestInvalidNonce']}`);
       // }
 
       // Try to load the request from the apcu object cache.
+      let requestReference;
       // let requestReference = apcu_fetch(
       //   "cashid_request_{parsedRequest['parameters']['nonce']}"
       // );
 
       // Validate that the request was issued by this service provider.
-      if (!user_initiated_request && requestReference === false) {
+      if (!userInitiatedRequest && requestReference === false) {
         throw new Error(
           `The request nonce was not issued by this service.", statuscode:${
             statusCodes['requestInvalidNonce']
@@ -355,7 +345,11 @@ class CashID {
       }
 
       // Validate if the request is available
-      if (!user_initiated_request && requestReference['available'] === false) {
+      if (
+        !userInitiatedRequest &&
+        requestReference !== undefined &&
+        requestReference['available'] === false
+      ) {
         throw new Error(
           `The request nonce was not issued by this service.", statuscode:${
             statusCodes['nonceConsumed']
@@ -364,7 +358,11 @@ class CashID {
       }
 
       // Validate if the request has expired.
-      if (!user_initiated_request && requestReference['expires'] < time()) {
+      if (
+        !userInitiatedRequest &&
+        requestReference !== undefined &&
+        requestReference['expires'] < time()
+      ) {
         throw new Error(
           `The request has expired && is no longer available.", statuscode:${
             statusCodes['requestExpired']
@@ -374,7 +372,8 @@ class CashID {
 
       // Validate that the request has not been tampered with.
       if (
-        !user_initiated_request &&
+        !userInitiatedRequest &&
+        requestReference !== undefined &&
         requestReference['request'] != responseObject['request']
       ) {
         throw new Error(
@@ -385,17 +384,17 @@ class CashID {
       }
 
       // signature verification.
-      const Message = bch.Message;
-      const message = new Message(responseObject['request']);
-      let verificationStatus = message.verify(
+
+      let verificationStatus = BITBOX.BitcoinCash.verifyMessage(
         responseObject['address'],
-        responseObject['signature']
+        responseObject['signature'],
+        responseObject['request']
       );
 
       // Validate the signature.
       if (verificationStatus !== true) {
         throw new Error(
-          `Signature verification failed: this.rpc_error, statuscode:${
+          `Signature verification failed. statuscode:${
             statusCodes['responseInvalidSignature']
           }`
         );
@@ -405,7 +404,7 @@ class CashID {
       let missingFields = [];
 
       // Loop over the required metadata fields.
-      for (const metadataValue of parsedRequest['parameters']['required']) {
+      for (const metadataValue in parsedRequest['parameters']['required']) {
         // If the field was required && missing from the response..
         if (
           metadataValue &&
@@ -475,12 +474,12 @@ class CashID {
       // }
 
       // Add the action && data parameters to the response structure.
-      responseObject['action'] = isset(parsedRequest['action'])
-        ? parsedRequest['action']
-        : 'auth';
-      responseObject['data'] = isset(parsedRequest['data'])
-        ? parsedRequest['data']
-        : '';
+      responseObject['action'] =
+        parsedRequest['action'] !== undefined
+          ? parsedRequest['action']
+          : 'auth';
+      responseObject['data'] =
+        parsedRequest['data'] !== undefined ? parsedRequest['data'] : '';
 
       // Return the parsed response.
       return responseObject;
