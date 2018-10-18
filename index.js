@@ -1,6 +1,5 @@
-const BCHNode = require('bitcoin-cash-rpc');
-let BITBOXSDK = require('bitbox-sdk/lib/bitbox-sdk').default;
-let BITBOX = new BITBOXSDK();
+const BITBOXSDK = require('bitbox-sdk/lib/bitbox-sdk').default;
+const BITBOX = new BITBOXSDK();
 
 const statusCodes = {
   authenticationSuccessful: 0,
@@ -607,4 +606,4 @@ class CashID {
   }
 }
 
-module.exports = CashID;
+module.exports = { CashID };
