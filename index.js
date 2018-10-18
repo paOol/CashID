@@ -606,4 +606,4 @@ class CashID {
   }
 }
 
-module.exports = { CashID };
+module.exports = CashID;
