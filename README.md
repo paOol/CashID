@@ -57,8 +57,11 @@ You would validate the object on the server side and return true as the response
 ## Available Methods
 
 `cashid.validateRequest(responseObject)`
+
 `cashid.confirmRequest(req,res)` // WIP
+
 `cashid.parseCashIDRequest(requestURI)`
+
 `cashid.createRequest(action, data, metadata)`
 
 ### Resources
