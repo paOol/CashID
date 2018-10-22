@@ -224,7 +224,6 @@ class CashID {
             statusCodes['responseBroken']
           }`
         );
-        // unsure if correct statuscode
       }
 
       // Validate if the required field 'request' exists.
