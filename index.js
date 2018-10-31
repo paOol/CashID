@@ -98,7 +98,7 @@ class CashID {
     // generate a random nonce.
     let nonce = this.getRandom(100000000, 999999999);
 
-    // console.log('action:', action, 'data:', data, 'metadata:', metadata);
+    console.log('action:', action, 'data:', data, 'metadata:', metadata);
 
     // Initialize an empty parameter list.
     let parameters = {};
@@ -493,7 +493,10 @@ class CashID {
    *
    * @returns {string}
    */
-  confirmRequest() {
+  confirmRequest(headers, body) {
+    console.log('in confirm request', this.statusConfirmation);
+    console.log('headers', headers);
+    console.log('body', body);
     // // Sanity check if headers have already been sent.
     // if (headers_sent()) {
     //   throw new Error(
