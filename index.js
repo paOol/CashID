@@ -214,9 +214,12 @@ class CashID {
   validateRequest(responseObject) {
     try {
       this.statusConfirmation = {
-        status: `${statusCodes['successful']}`,
+        status: `${statusCodes['authenticationSuccessful']}`,
         message: ''
       };
+
+      let message;
+      let code = parseInt(this.statusConfirmation.status);
 
       if (responseObject === null) {
         throw new Error(
@@ -471,6 +474,18 @@ class CashID {
       //   );
       // }
 
+      // Add status message
+
+      Object.entries(statusCodes).forEach(x => {
+        let key = x[0];
+        let val = x[1];
+
+        if (val === code) {
+          message = key;
+        }
+      });
+      this.statusConfirmation.message = message;
+
       // Add the action && data parameters to the response structure.
       responseObject['action'] =
         parsedRequest['action'] !== undefined
@@ -491,29 +506,27 @@ class CashID {
    * confirms request
    *
    *
-   * @returns {string}
+   * @returns {string} status code
    */
-  confirmRequest(headers, body) {
-    console.log('in confirm request', this.statusConfirmation);
-    console.log('headers', headers);
-    console.log('body', body);
-    // // Sanity check if headers have already been sent.
-    // if (headers_sent()) {
-    //   throw new Error(
-    //     "confirmRequest() was called after data had been transmitted to the client, which prevents setting the required headers."
-    //   );
-    // }
-    // // Sanity check if validation has not yet been done.
-    // if (!isset(this.statusConfirmation["status"])) {
-    //   throw new Error(
-    //     "confirmRequest() was called before validate_request so there is no confirmation to transmit to the client."
-    //   );
-    // }
-    // // Configure confirmation message type.
-    // header("Content-type: application/json; charset=utf-8");
-    // header("Cache-Control: no-cache");
-    // // send the response confirmation back to the identity manager.
-    // return this.statusConfirmation;
+  confirmRequest(headers) {
+    // Sanity check if validation has not yet been done.
+    if (this.statusConfirmation.status === undefined) {
+      throw new Error(
+        'confirmRequest() was called before validateRequest so there is no confirmation to transmit to the client.'
+      );
+    }
+
+    Object.values(statusCodes);
+    //     let  result = statusCodes.find(obj => {
+    //   return obj.b === this.statusConfirmation.status
+    // })
+
+    if (headers['content-type'] !== 'application/json') {
+      throw new Error('wrong header type was sent.');
+    }
+
+    // send the response confirmation back to the identity manager.
+    return this.statusConfirmation;
   }
 
   /**
