@@ -496,6 +496,11 @@ class CashID {
           ? parsedRequest['parameters']['data']
           : '';
 
+      responseObject['nonce'] =
+        parsedRequest['parameters']['nonce'] !== undefined
+          ? parsedRequest['parameters']['nonce']
+          : '';
+
       // Return the parsed response.
       return responseObject;
     } catch (e) {
