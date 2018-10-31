@@ -98,8 +98,6 @@ class CashID {
     // generate a random nonce.
     let nonce = this.getRandom(100000000, 999999999);
 
-    console.log('action:', action, 'data:', data, 'metadata:', metadata);
-
     // Initialize an empty parameter list.
     let parameters = {};
 
@@ -426,27 +424,29 @@ class CashID {
       }
 
       // Loop over the supplied metadata fields.
-      for (const metadataValue of responseObject['metadata']) {
-        // Validate if the supplied metadata was requested
-        if (
-          parsedRequest['parameters']['required'][metadataName] ===
-            'undefined' &&
-          parsedRequest['parameters']['optional'][metadataName] === undefined
-        ) {
-          throw new Error(
-            `The metadata field '{metadataName}' was not part of the request.", ${
-              statusCodes['responseInvalidMetadata']
-            }`
-          );
-        }
+      if (responseObject['metadata'] !== undefined) {
+        for (const metadataValue of responseObject['metadata']) {
+          // Validate if the supplied metadata was requested
+          if (
+            parsedRequest['parameters']['required'][metadataName] ===
+              'undefined' &&
+            parsedRequest['parameters']['optional'][metadataName] === undefined
+          ) {
+            throw new Error(
+              `The metadata field '${metadataName}' was not part of the request.", ${
+                statusCodes['responseInvalidMetadata']
+              }`
+            );
+          }
 
-        // Validate if the supplied value is empty.
-        if (metadataValue == '' || metadataValue === null) {
-          throw new Error(
-            `The metadata field '{metadataName}' did not contain any value.", ${
-              statusCodes['responseMalformedMetadata']
-            }`
-          );
+          // Validate if the supplied value is empty.
+          if (metadataValue == '' || metadataValue === null) {
+            throw new Error(
+              `The metadata field '${metadataName}' did not contain any value.", ${
+                statusCodes['responseMalformedMetadata']
+              }`
+            );
+          }
         }
       }
 
@@ -488,11 +488,13 @@ class CashID {
 
       // Add the action && data parameters to the response structure.
       responseObject['action'] =
-        parsedRequest['action'] !== undefined
-          ? parsedRequest['action']
+        parsedRequest['parameters']['action'] !== undefined
+          ? parsedRequest['parameters']['action']
           : 'auth';
       responseObject['data'] =
-        parsedRequest['data'] !== undefined ? parsedRequest['data'] : '';
+        parsedRequest['parameters']['data'] !== undefined
+          ? parsedRequest['parameters']['data']
+          : '';
 
       // Return the parsed response.
       return responseObject;
