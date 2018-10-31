@@ -504,8 +504,9 @@ class CashID {
       // Return the parsed response.
       return responseObject;
     } catch (e) {
-      console.log('err', e.message);
-      return false;
+      console.log('err with validation', e.message);
+      return e.message;
+      //return false;
     }
   }
 
