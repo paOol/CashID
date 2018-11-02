@@ -424,7 +424,10 @@ class CashID {
       }
 
       // Loop over the supplied metadata fields.
-      if (responseObject['metadata'] !== undefined) {
+      if (
+        responseObject['metadata'] !== undefined &&
+        responseObject['metadata'].length
+      ) {
         for (const metadataValue of responseObject['metadata']) {
           // Validate if the supplied metadata was requested
           if (
