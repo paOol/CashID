@@ -1,5 +1,5 @@
-const BITBOXSDK = require('bitbox-sdk/lib/bitbox-sdk').default;
-const BITBOX = new BITBOXSDK();
+const bitboxSDK = require('bitbox-sdk').BITBOX;
+const BITBOX = new bitboxSDK();
 
 const statusCodes = {
   authenticationSuccessful: 0,
