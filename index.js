@@ -78,8 +78,8 @@ class CashID {
    */
 
   constructor(domain, path) {
-    this.domain = domain || '';
-    this.path = path || '';
+    this.domain = domain || 'auth.cashid.org';
+    this.path = path || '/api/auth';
 
     this.statusConfirmation;
   }

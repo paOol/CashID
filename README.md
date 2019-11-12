@@ -21,10 +21,14 @@ grab from NPM
 ```
 import CashID from 'cashid'; // or const CashID = require('cashid');
 
-let cashid = new CashID(domain, path);
-// domain = example.com (no http prefix)
+const cashid = new CashID();
+
+// or if using your own server
+// const cashid = new CashID(domain, path);
+// domain = something.com  (no http prefix)
 // path = /api/auth  (endpoint that will receive POST json data)
-let uri = cashid.createRequest(action, data, metadata);
+
+const uri = cashid.createRequest(action, data, metadata);
 
 // action is an optional string, ie: 'login'
 // data is an optional string, ie: 'newsletter' or '123-123-123'
@@ -57,8 +61,6 @@ You would validate the object on the server side and return true as the response
 ## Available Methods
 
 `cashid.validateRequest(responseObject)`
-
-`cashid.confirmRequest(req,res)` // WIP
 
 `cashid.parseCashIDRequest(requestURI)`
 
