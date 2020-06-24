@@ -403,7 +403,7 @@ class CashID {
       let missingFields = [];
 
       // Loop over the required metadata fields.
-      for (const metadataValue in parsedRequest['parameters']['required']) {
+      for (const metadataName in parsedRequest['parameters']['required']) {
         // If the field was required && missing from the response..
         if (
           metadataValue &&
